@@ -70,7 +70,7 @@ jobs:
         CHART: ${{ inputs.chart }}
     - name: Prepare release spec
       id: prepare-spec
-      run:
+      run: |
         spec_gzip=$(jq --arg chart "${CHART}" --arg content "${CONTENT}" '[{ "name": $chart, "path": $chart, "content": $content }]' \
           | gzip --to-stdout \
           | base64)
@@ -80,7 +80,7 @@ jobs:
         CONTENT: ${{ step.encode-chart.outputs.content }}
     - name: Create the release
       id: create-release
-      run:
+      run: |
         body=$(jq --arg spec_gzip "${SPEC_GZIP}" '{ "spec_gzip": $spec_gzip }'
         sequence=$(curl --location "https://api.replicated.com/vendor/v3/app/${APP_ID}/release" \
                       --header 'Content-Type: application/json' \
