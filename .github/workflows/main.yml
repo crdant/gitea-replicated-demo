@@ -35,7 +35,6 @@ jobs:
     - name: Package Helm chart with a build-specific version
       id: package-helm-chart
       run: |
-        mkdir -p release
         version="${CHART_VERSION}.build.${SHORT_SHA}"
         helm package . --version="${version}" -u 
         echo "package=gitea-${version}.tgz" >> $GITHUB_OUTPUT
