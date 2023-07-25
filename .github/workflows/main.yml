@@ -56,7 +56,7 @@ jobs:
       run: |
         # use the reoplicated api and filter down the reults to get the applicationm ID
         # based on the providded app slug
-        app_id = $(curl --location 'https://api.replicated.com/vendor/v3/apps' \
+        app_id=$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
                         --header 'Accept: application/json' \
                         --header "Authorization: ${REPLICATED_API_TOKEN}" \
                       | jq --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')
