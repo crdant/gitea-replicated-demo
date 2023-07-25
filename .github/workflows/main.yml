@@ -83,7 +83,7 @@ jobs:
     - name: Create the release
       id: create-release
       run: |
-        body=$(jq --arg spec_gzip "${SPEC_GZIP}" '{ "spec_gzip": $spec_gzip }'
+        body=$(jq --arg spec_gzip "${SPEC_GZIP}" '{ "spec_gzip": $spec_gzip }')
         sequence=$(curl --location "https://api.replicated.com/vendor/v3/app/${APP_ID}/release" \
                       --header 'Content-Type: application/json' \
                       --header 'Accept: application/json' \
