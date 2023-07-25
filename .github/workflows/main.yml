@@ -69,7 +69,7 @@ jobs:
       run: |
         echo "content=$(base64 -w 0 ${CHART})" >> $GITHUB_OUTPUT
       env: 
-        CHART: ${{ inputs.chart }}
+        CHART: ${{ needs.package-chart.outputs.chart }}
     - name: Prepare release spec
       id: prepare-spec
       run: |
@@ -78,7 +78,7 @@ jobs:
           | base64)
         echo "spec_gzip=${spec_gzip}" >> $GITHUB_OUTPUT
       env:
-        CHART: ${{ inputs.chart }}
+        CHART: ${{ needs.package-chart.outputs.chart }}
         CONTENT: ${{ steps.encode-chart.outputs.content }}
     - name: Create the release
       id: create-release
