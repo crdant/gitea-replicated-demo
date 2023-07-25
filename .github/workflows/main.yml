@@ -36,9 +36,12 @@ jobs:
       id: package-helm-chart
       run: |
         mkdir -p release
-        version=${{ steps.get-chart-version.outputs.result }}+build.${{ steps.get-short-sha.outputs.short-sha }}
+        version="${CHART_VERSION}.build.${SHORT_SHA}"
         helm package . --version="${version}" -u 
         echo "package=gitea-${version}.tgz" >> $GITHUB_OUTPUT
+      env:
+        CHART_VERSION: ${{ steps.get-chart-version.outputs.result }}
+        SHORT_SHA: ${{ steps.get-short-sha.outputs.short-sha }}
 
   # Create a Replicated release without promoting to a channel. The Replicated
   # CLI isn't super scripting friendly when it comes to creating releases, so
