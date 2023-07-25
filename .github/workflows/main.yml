@@ -79,8 +79,8 @@ jobs:
           | base64)
         echo "spec_gzip=${spec_gzip}" >> $GITHUB_OUTPUT
       env:
-        CHART: ${{ needs.package-chart.outputs.package }}
-        CONTENT: ${{ needs.package.outputs.content }}
+        CHART: ${{ needs.package-chart.outputs.chart }}
+        CONTENT: ${{ needs.package-chart.outputs.content }}
     - name: Create the release
       id: create-release
       run: |
