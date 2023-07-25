@@ -26,9 +26,9 @@ jobs:
     - name: Get short SHA sum
       id: get-short-rev
       shell: bash
-      run: echo "short-shar=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      run: echo "short-rev=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
     - name: Get the expected chart version
-      id: get_chart_version
+      id: get-chart-version
       uses: mikefarah/yq@master
       with:
         cmd: yq '.version' Chart.yaml
@@ -41,7 +41,7 @@ jobs:
         echo "package=gitea-${version}.tgz" >> $GITHUB_OUTPUT
       env:
         CHART_VERSION: ${{ steps.get-chart-version.outputs.result }}
-        SHORT_SHA: ${{ steps.get-short-sha.outputs.short-sha }}
+        SHORT_SHA: ${{ steps.get-short-rev.outputs.short-rev }}
 
   # Create a Replicated release without promoting to a channel. The Replicated
   # CLI isn't super scripting friendly when it comes to creating releases, so
