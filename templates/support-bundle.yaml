@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "common.names.fullname" . }}-support-bundle
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+    troubleshoot.sh/kind: support-bundle
+stringData:
+  support-bundle-spec: |
+    apiVersion: troubleshoot.sh/v1beta2
+    kind: SupportBundle
+    metadata:
+      name: support-bundle
+    spec:
+      collectors: {{- include "troubleshoot.collectors.shared" .  | nindent 8 }}
+        - logs:
+            name: app/replicated/logs
+            namespace: {{ include "common.names.namespace" . | quote }}
+            selector:
+              - app.kubernetes.io/name=replicated
+              - app.kubernetes.io/instance=gitea
+            containerNames:
+              - replicated
+            limits:
+              maxAge: 720h
+        - logs:
+            name: app/gitea/logs
+            namespace: {{ include "common.names.namespace" . | quote }}
+            selector: 
+              - app.kubernetes.io/name=gitea
+              - app.kubernetes.io/instance=gitea
+            limits:
+              maxAge: 720h
+        - logs:
+            name: app/database/logs
+            namespace: {{ include "common.names.namespace" . | quote }}
+            selector:
+              - app.kubernetes.io/name=postgresql
+              - app.kubernetes.io/instance=gitea
+              - app.kubernetes.io/component=primary
+            containerNames:
+              - postgresql
+            limits:
+              maxAge: 720h
+      analyzers: {{- include "troubleshoot.analyzers.shared" .  | nindent 8 }}
+        - deploymentStatus:
+            name: gitea
+            namespace: {{ include "common.names.namespace" . | quote }}
+            outcomes:
+              - fail:
+                  when: "absent" # note that the "absent" failure state must be listed first if used.
+                  message: The Gitea application is not present.
+              - fail:
+                  when: "< 1"
+                  message: The Gitea application is currently not ready.
+              - pass:
+                  message: There are multiple replicas of the Gitea application ready.
+        - statefulsetStatus:
+            name: gitea-postgresql
+            namespace: {{ include "common.names.namespace" . | quote }}
+            outcomes:
+              - fail:
+                  when: "absent" # note that the "absent" failure state must be listed first if used.
+                  message: Gitea's database is not present.
+              - fail:
+                  when: "< 1"
+                  message: Gitea's database is currently not ready.
+              - pass:
+                  message: Gitea's database is ready and available to the application
+        - deploymentStatus:
+            name: replicated
+            namespace: {{ include "common.names.namespace" . | quote }}
+            outcomes:
+              - fail:
+                  when: "absent" # note that the "absent" failure state must be listed first if used.
+                  message: The Replicated SDK is not present.
+              - fail:
+                  when: "< 1"
+                  message: |
+                    The Replicated SDK is currently not ready. This may prevent discovering new
+                    versions of the Gitea application.
+              - pass:
+                  message: The Replicated SDK is ready and available to provide information.
+        - registryImages:
+            name: Registry Images
+            collectorName: images
+            outcomes:
+              - fail:
+                  when: "missing > 0"
+                  message: |
+                    Your cluster isn't able to access any of the Gitea images from the installed namespace.
+              - warn:
+                  when: "errors > 0"
+                  message: |
+                    Your cluster is unable to access one or more of the Gitea images from the installed namespace.
+              - pass:
+                  message: Your cluster is able to access all required images into the required namespace
