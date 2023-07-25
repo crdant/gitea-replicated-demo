@@ -34,7 +34,7 @@ jobs:
       with:
         cmd: yq '.version' Chart.yaml
     - name: Package Helm chart with a build-specific version
-      id: package-helm-chart
+      id: package-chart
       run: |
         version="${CHART_VERSION}.build.${SHORT_SHA}"
         helm package . --version="${version}" -u 
