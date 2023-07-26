@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: package-chart
     outputs:
-      sequence: ${{ steps.create-release.outputs.release_sequence }}
+      sequence: ${{ steps.create-release.outputs.release-sequence }}
     steps:
       - name: Download chart artifact
         id: get-chart
@@ -63,7 +63,6 @@ jobs:
         with:
           name: chart
           path: ${{ needs.package-chart.outputs.chart }}
-
       - name: Create Release
         id: create-release
         uses: replicatedhq/compatibility-actions/create-release@feature/crdant/flexibile-create-release
