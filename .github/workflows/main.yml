@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       chart: ${{ steps.package-chart.outputs.package }}
-      content: ${{ steps.encode-chart.outputs.content }}
     steps:
     - uses: actions/checkout@v3
     - name: Get release channel
@@ -42,13 +41,13 @@ jobs:
       env:
         CHART_VERSION: ${{ steps.get-chart-version.outputs.result }}
         SHORT_SHA: ${{ steps.get-short-rev.outputs.short-rev }}
-    - name: Encode Helm chart
-      id: encode-chart
-      run: |
-        echo "content=$(base64 -w 0 ${CHART})" >> $GITHUB_OUTPUT
-      env: 
-        CHART: ${{ steps.package-chart.outputs.package }}
-
+    - name: Upload chart artifact
+      id: uplaad-chart
+      uses: actions/upload-artifact@master
+      with:
+        name: chart
+        path: ${{ steps.package-chart.outputs.package }}
+          
   # Create a Replicated release without promoting to a channel. The Replicated
   # CLI isn't super scripting friendly when it comes to creating releases, so
   # this job uses a few different calls with curl instead.
@@ -56,45 +55,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: package-chart
     outputs:
-      sequence: ${{ steps.create-release.outputs.sequence }}
+      sequence: ${{ steps.create-release.outputs.release_sequence }}
     steps:
-    - name: Get the application ID
-      id: get-app-id
-      run: |
-        # use the reoplicated api and filter down the reults to get the applicationm ID
-        # based on the providded app slug
-        app_id=$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
-                        --header 'Accept: application/json' \
-                        --header "Authorization: ${REPLICATED_API_TOKEN}" \
-                      | jq --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')
-        echo "app-id=${app_id}" >> $GITHUB_OUTPUT
-      env:
-        REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
-        REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
-    - name: Prepare release spec
-      id: prepare-spec
-      run: |
-        spec_gzip=$(jq --arg chart "${CHART}" --arg content "${CONTENT}" '[{ "name": $chart, "path": $chart, "content": $content }]' \
-          | gzip --to-stdout \
-          | base64)
-        echo "spec_gzip=${spec_gzip}" >> $GITHUB_OUTPUT
-      env:
-        CHART: ${{ needs.package-chart.outputs.chart }}
-        CONTENT: ${{ needs.package-chart.outputs.content }}
-    - name: Create the release
-      id: create-release
-      run: |
-        body=$(jq --arg spec_gzip "${SPEC_GZIP}" '{ "spec_gzip": $spec_gzip }')
-        sequence=$(curl --location "https://api.replicated.com/vendor/v3/app/${APP_ID}/release" \
-                      --header 'Content-Type: application/json' \
-                      --header 'Accept: application/json' \
-                      --header "Authorization: ${REPLICATED_API_TOKEN}" \
-                      --data "${body}" \
-                    | jq .release.sequence )
-        echo "sequence=${sequence}" >> $GITHUB_OUTPUT
-      env:
-        SPEC_GZIP: ${{ steps.prepare-spec.outputs.spec_gzip }}
+      - name: Download chart artifact
+        id: get-chart
+        uses: actions/download-artifact@master
+        with:
+          name: chart
+          path: ${{ needs.package-chart.outputs.chart }}
 
+      - name: Create Release
+        id: create-release
+        uses: replicatedhq/compatibility-actions/create-release@feature/crdant/flexible-create-release
+        with:
+          app-slug: ${{ secrets.REPLICATED_APP }}
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          chart: ${{ needs.package-chart.outputs.chart }}
+       
   promote-release:
     runs-on: ubuntu-latest
     needs: create-release
