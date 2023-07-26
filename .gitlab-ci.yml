@@ -6,7 +6,7 @@ stages:          # List of stages for jobs, and their order of execution
 'Package Chart':      # Package with Helm
   stage: package
   image: 
-    name: cgr.dev/chainguard/helm:latest
+    name: dtzar/helm-kubectl:3.12.2
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
     - helm package -u . # As the entrypoint is skipped, specifying the entire command.
