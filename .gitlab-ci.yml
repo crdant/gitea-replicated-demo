@@ -18,6 +18,8 @@ stages:          # List of stages for jobs, and their order of execution
   stage: release
   dependencies:
     - 'Package Chart'
+  image:
+    name: nixery.dev/shell/curl/jq
   script:
     - |
       chart=$(ls ./*.tgz)
