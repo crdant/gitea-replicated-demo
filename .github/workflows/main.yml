@@ -66,7 +66,7 @@ jobs:
 
       - name: Create Release
         id: create-release
-        uses: replicatedhq/compatibility-actions/create-release@feature/crdant/flexible-create-release
+        uses: replicatedhq/compatibility-actions/create-release@feature/crdant/flexibile-create-release
         with:
           app-slug: ${{ secrets.REPLICATED_APP }}
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
