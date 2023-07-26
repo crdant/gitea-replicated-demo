@@ -17,7 +17,7 @@ stages:          # List of stages for jobs, and their order of execution
 'Create Release':      # Create the release 
   stage: release
   dependencies:
-    - 'Package with Helm'
+    - 'Package Chart'
   script:
     - |
       chart=$(ls ./*.tgz)
@@ -39,7 +39,6 @@ stages:          # List of stages for jobs, and their order of execution
     reports:
       dotenv: release.env
   
-
 'Promote Release':      # Promote the release to the appropriate channel
   stage: promote
   dependencies:
