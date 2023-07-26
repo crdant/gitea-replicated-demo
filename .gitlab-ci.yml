@@ -1,0 +1,38 @@
+stages:          # List of stages for jobs, and their order of execution
+  - setup
+  - package
+  - release
+  - promote
+
+'Package Chart':      # Package with Helm
+  stage: package
+  image: 
+    name: cgr.dev/chainguard/helm:latest
+    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
+  script:
+    - helm package -u . # As the entrypoint is skipped, specifying the entire command.
+  artifacts:
+    paths:
+      - "**/*.tgz"
+
+'Create Release':      # Create the release 
+  stage: release
+  dependencies:
+    - 'Package with Helm'
+  service:
+    name: replicated/vendor-cli:latest
+    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
+  script:
+    - /replicated release create --auto -y # As the entrypoint is skipped, specifying the entire command.
+
+'Promote Release':      # Promote the release to the appropriate channel
+  stage: promote
+  dependencies:
+    - 'Create Release'
+  service: 
+    name: replicated/vendor-cli:latest
+    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
+  script:
+    - /replicated release promote 
+
+
