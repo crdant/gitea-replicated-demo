@@ -1,5 +1,4 @@
 stages:          # List of stages for jobs, and their order of execution
-  - setup
   - package
   - release
   - promote
@@ -19,20 +18,36 @@ stages:          # List of stages for jobs, and their order of execution
   stage: release
   dependencies:
     - 'Package with Helm'
-  service:
-    name: replicated/vendor-cli:latest
-    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
-    - /replicated release create --auto -y # As the entrypoint is skipped, specifying the entire command.
+    - |
+      chart=$(ls ./*.tgz)
+      app_id="$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
+                   --header 'Accept: application/json' \
+                   --header "Authorization: ${REPLICATED_API_TOKEN}" \
+                | jq --raw-output --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')"
+      spec_gzip="$(jq --compact --null-input --arg chart ${chart} --rawfile content <(base64 -w 0 ${chart}) '[ {"name": $chart, "path": $chart, "content": $content}]' | \
+        | gzip --to-stdout \
+        | base64 -w 0)"
+      sequence="$(curl --location "https://api.replicated.com/vendor/v3/app/${app_id}/release" \
+                    --header 'Content-Type: application/json' \
+                    --header 'Accept: application/json' \
+                    --header "Authorization: ${REPLICATED_API_TOKEN}" \
+                    --data "$(jq --compact --null-input --arg spec_gzip "${spec_gzip}" '{ "spec_gzip", $spec_gzip }')" \
+                  | jq '{ "sequence": .sequence }')"
+      echo "SEQUENCE=${sequence}" > release.env
+  artifacts:
+    reports:
+      dotenv: release.env
+  
 
 'Promote Release':      # Promote the release to the appropriate channel
   stage: promote
   dependencies:
     - 'Create Release'
-  service: 
+  image: 
     name: replicated/vendor-cli:latest
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
-    - /replicated release promote 
+    - /replicated release promote ${SEQUENCE} ${CI_COMMIT_REF_NAME}
 
 
