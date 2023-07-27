@@ -107,12 +107,16 @@ jobs:
       - name: Create test customer
         id: create-customer
         run: |
-          customer_id=$(replicated customer create --type test --name ${CUSTOMER_NAME} --output json | jq .customer.id)
+          customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
+          customer_id=$(echo "${CUSTOMER}" | jq .customer.id)
+          customer_password=$(echo "${CUSTOMER}" | jq .customer.installationId)
           echo "customer_id=${customer_id}" >> $GITHUB_OUTPUT
+          echo "customer_login=${CUSTOMER_EMAIL}" >> $GITHUB_OUTPUT
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
           CUSTOMER_NAME: ${{ github.ref_name }}@${{ github.sha }}.${{github.job }}.${{ github.run_attempt }}
+          CUSTOMER_EMAIL: ${github.job}}.${{github.run_attempt}}@${{ github.ref_name }}.test
       - name: Create test cluster
         id: create-cluster
         run: |
