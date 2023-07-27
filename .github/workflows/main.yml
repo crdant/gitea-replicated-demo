@@ -118,7 +118,7 @@ jobs:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
           CUSTOMER_NAME: ${{ github.ref_name }}@${{ github.sha }}.${{github.job }}.${{ github.run_attempt }}
-          CUSTOMER_EMAIL: ${{ github.job }}.${{github.run_attempt}}@${{ github.ref_name }}.test
+          CUSTOMER_EMAIL: ${{ github.job }}.${{github.run_attempt}}@${{ github.sha }}.test
       - name: Create test cluster
         id: create-cluster
         run: |
