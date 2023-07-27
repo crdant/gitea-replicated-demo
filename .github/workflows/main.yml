@@ -1,4 +1,4 @@
-name: Continuous Delivery to the Replicated platform
+#name: Continuous Delivery to the Replicated platform
 
 on:
   push:
@@ -149,12 +149,14 @@ jobs:
           CUSTOMER_LOGIN: ${{ steps.create-customer.outputs.customer-login }}
           CUSTOMER_PASSWORD: ${{ steps.create-customer.outputs.customer-password }}
       - name: Delete test cluster
+        id: delete-cluster
         run: |
           set -euxo pipefail
           replicated cluster rm ${CLUSTER_ID}
         env:
           CLUSTER_ID: ${{ steps.create-cluster.outputs.cluster-id }}
       - name: Delete test customer
+        id: delete-customer
         run: |
           set -euxo pipefail
           replicated cluster customer --customer ${CLUSTER_ID}
