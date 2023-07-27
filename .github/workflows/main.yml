@@ -122,7 +122,7 @@ jobs:
         id: create-cluster
         run: |
           set -euxo pipefail
-          cluster_id=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --output json | jq .id)
+          cluster_id=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --output json | jq --raw-output .id)
           replicated cluster kubeconfig --id ${cluster_id}
           echo "cluster_id=${cluster_id}" >> $GITHUB_OUTPUT
           echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
