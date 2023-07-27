@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: package-chart
     outputs:
-      sequence: ${{ steps.create-release.outputs.release-sequence }}
+      release-sequence: ${{ steps.create-release.outputs.release-sequence }}
     steps:
       - name: Download chart artifact
         id: get-chart
