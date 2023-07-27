@@ -19,7 +19,7 @@ stages:          # List of stages for jobs, and their order of execution
   dependencies:
     - 'Package Chart'
   image:
-    name: nixery.dev/shell/curl/jq/gnugrep
+    name: nixery.dev/shell/gnugrep/gzip/curl/jq/yq-go
   script:
     - |
       chart=$(ls ./*.tgz)
@@ -35,7 +35,7 @@ stages:          # List of stages for jobs, and their order of execution
                     --header 'Content-Type: application/json' \
                     --header 'Accept: application/json' \
                     --header "Authorization: ${REPLICATED_API_TOKEN}" \
-                    --data "$(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }')" \
+                    --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
                     --silent --show-error \
                   | jq --compact-output '{ "sequence": .release.sequence }')"
       echo "SEQUENCE=${sequence}" > release.env
