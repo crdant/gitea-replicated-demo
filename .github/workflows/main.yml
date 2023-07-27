@@ -147,6 +147,19 @@ jobs:
           CHART: oci://registry.replicated.com/${{ secrets.REPLICATED_APP }}/releases/${{ steps.create-release.outputs.release-sequence }}
           CUSTOMER_LOGIN: ${{ steps.create-customer.outputs.customer-login }}
           CUSTOMER_PASSWORD: ${{ steps.create-customer.outputs.customer-password }}
+      - name: Delete test cluster
+        run: |
+          set -euxo pipefail
+          replicated cluster rm ${CLUSTER_ID}
+        env:
+          CLUSTER_ID: ${{ steps.create-cluster.outputs.cluster-id }}
+      - name: Delete test customer
+        run: |
+          set -euxo pipefail
+          replicated cluster customer --customer ${CLUSTER_ID}
+        env:
+          CUSTOMER_NAME: ${{ steps.create-customer.outputs.customer-id }}
+
 
   promote-release:
     runs-on: ubuntu-latest
