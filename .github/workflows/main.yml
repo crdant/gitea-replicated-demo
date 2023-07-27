@@ -74,6 +74,10 @@ jobs:
   smoke-test:
     runs-on: ubuntu-latest
     needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        cluster: [ {distribution: k3s, version: v1.25}, {distribution: k3s, version: v1.26}]
     outputs:
       sequence: ${{ steps.create-release.outputs.release-sequence }}
     steps:
@@ -91,6 +95,18 @@ jobs:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
           CUSTOMER_NAME: ${{ github.ref_name }}@${{ github.sha }}.${{github.job }}.${{ github.run_attempt }}
+      - name: Create test cluster
+        id: create-cluster
+        run: |
+          cluster_id=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --output json | jq .cluster.id)
+          echo "cluster_id=${cluster_id}" >> $GITHUB_OUTPUT
+          echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+          REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
+          CLUSTER_NAME: ${{ github.ref_name }}@${{ github.sha }}.${{github.job }}.${{ github.run_attempt }}
+          DISTRO: ${{ matrix.cluster.distribution }}
+          VERSION: ${{ matrix.cluster.version }}
 
   promote-release:
     runs-on: ubuntu-latest
