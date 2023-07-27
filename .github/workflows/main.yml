@@ -1,0 +1,93 @@
+name: Continuous Delivery to the Replicated platform
+
+on:
+  push:
+    paths:
+    - '**'
+    - '!**.md'
+    - '!doc/**'
+    - '!**.png'
+
+jobs:
+  package-chart:
+    runs-on: ubuntu-latest
+    outputs:
+      chart: ${{ steps.package-chart.outputs.package }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get release channel
+      id: get-channel
+      shell: bash
+      run: |
+        if [[ ${GITHUB_REF_NAME} == "main" ]] ; then
+          echo "channel=Unstable" >> $GITHUB_OUTPUT
+        fi 
+        echo "channel=${GITHUB_REF_NAME}"
+    - name: Get short SHA sum
+      id: get-short-rev
+      shell: bash
+      run: echo "short-rev=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+    - name: Get the expected chart version
+      id: get-chart-version
+      uses: mikefarah/yq@master
+      with:
+        cmd: yq '.version' Chart.yaml
+    - name: Package Helm chart with a build-specific version
+      id: package-chart
+      run: |
+        version="${CHART_VERSION}.build.${SHORT_SHA}"
+        helm package . --version="${version}" -u 
+        echo "package=gitea-${version}.tgz" >> $GITHUB_OUTPUT
+      env:
+        CHART_VERSION: ${{ steps.get-chart-version.outputs.result }}
+        SHORT_SHA: ${{ steps.get-short-rev.outputs.short-rev }}
+    - name: Upload chart artifact
+      id: uplaad-chart
+      uses: actions/upload-artifact@master
+      with:
+        name: chart
+        path: ${{ steps.package-chart.outputs.package }}
+          
+  # Create a Replicated release without promoting to a channel. The Replicated
+  # CLI isn't super scripting friendly when it comes to creating releases, so
+  # this job uses a few different calls with curl instead.
+  create-release:
+    runs-on: ubuntu-latest
+    needs: package-chart
+    outputs:
+      sequence: ${{ steps.create-release.outputs.release-sequence }}
+    steps:
+      - name: Download chart artifact
+        id: get-chart
+        uses: actions/download-artifact@master
+        with:
+          name: chart
+          path: ${{ needs.package-chart.outputs.chart }}
+      - name: Create Release
+        id: create-release
+        uses: replicatedhq/compatibility-actions/create-release@feature/crdant/flexibile-create-release
+        with:
+          app-slug: ${{ secrets.REPLICATED_APP }}
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
+          chart: ${{ needs.package-chart.outputs.chart }}
+       
+  promote-release:
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get the channel for the release
+        id: get-channel
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]] ; then 
+            echo "channel=Unstable" >> $GITHUB_OUTPUT
+          fi
+          echo "channel=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+      - name: Promote the release
+        id: promote-release
+        uses: docker://replicated/vendor-cli:latest
+        with:
+          args: release promote ${{ needs.create-release.outputs.sequence }} ${{ steps.get-channel.outputs.channel }}
+        env:
+          REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
+          REPLICATED_APP: ${{ secrets.REPLICATED_APP }}

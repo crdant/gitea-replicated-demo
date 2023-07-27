@@ -1,0 +1,58 @@
+stages:          # List of stages for jobs, and their order of execution
+  - package
+  - release
+  - promote
+
+'Package Chart':      # Package with Helm
+  stage: package
+  image: 
+    name: dtzar/helm-kubectl:3.12.2
+    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
+  script:
+    - helm package -u . # As the entrypoint is skipped, specifying the entire command.
+  artifacts:
+    paths:
+      - "**/*.tgz"
+
+'Create Release':      # Create the release 
+  stage: release
+  dependencies:
+    - 'Package Chart'
+  image:
+    name: nixery.dev/shell/gnugrep/gzip/curl/jq/yq-go
+    entrypoint: [""]
+  script:
+    - |
+      set -euxo pipefail
+      chart=$(ls ./*.tgz)
+      app_id="$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
+                   --header 'Accept: application/json' \
+                   --header "Authorization: ${REPLICATED_API_TOKEN}" \
+                   --silent --show-error \
+                | jq --raw-output --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')"
+      jq --null-input --compact-output --arg chart ${chart} --rawfile content <(base64 -w 0 ${chart}) '[ {"name": $chart, "path": $chart, "content": $content}]' \
+        | gzip --to-stdout \
+        | base64 -w 0 > spec.gz
+      sequence="$(curl --location "https://api.replicated.com/vendor/v3/app/${app_id}/release" \
+                    --header 'Content-Type: application/json' \
+                    --header 'Accept: application/json' \
+                    --header "Authorization: ${REPLICATED_API_TOKEN}" \
+                    --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
+                    --silent --show-error \
+                  | jq --compact-output '.release.sequence')"
+      echo "SEQUENCE=${sequence}" > release.env
+  artifacts:
+    reports:
+      dotenv: release.env
+  
+'Promote Release':      # Promote the release to the appropriate channel
+  stage: promote
+  dependencies:
+    - 'Create Release'
+  image: 
+    name: replicated/vendor-cli:latest
+    entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
+  script:
+    - /replicated release promote ${SEQUENCE} ${CI_COMMIT_REF_NAME}
+
+
