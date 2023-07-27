@@ -107,6 +107,7 @@ jobs:
       - name: Create test customer
         id: create-customer
         run: |
+          set -euxo pipefail
           customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
           customer_id=$(echo "${CUSTOMER}" | jq .customer.id)
           customer_password=$(echo "${CUSTOMER}" | jq .customer.installationId)
@@ -120,6 +121,7 @@ jobs:
       - name: Create test cluster
         id: create-cluster
         run: |
+          set -euxo pipefail
           cluster_id=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --output json | jq .cluster.id)
           replicated cluster kubeconfig --id ${cluster_id}
           echo "cluster_id=${cluster_id}" >> $GITHUB_OUTPUT
@@ -133,6 +135,7 @@ jobs:
       - name: Install to test cluster
         id: install-chart
         run: |
+          set -euxo pipefail
           helm registry login ${REGISTRY} --username ${CUSTOMER_LOGIN} --password ${CUSTOMER_PASSWORD}
           helm install ${CHART}
         env:
