@@ -9,16 +9,6 @@ on:
     - '!**.png'
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/setup-go@v4
-    - uses: actions/checkout@v3
-      with:
-        repository: replicatedhq/replicated
-    - name: Install replicated CLI
-
-
   package-chart:
     runs-on: ubuntu-latest
     outputs:
