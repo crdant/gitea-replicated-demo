@@ -39,7 +39,7 @@ stages:          # List of stages for jobs, and their order of execution
                     --header "Authorization: ${REPLICATED_API_TOKEN}" \
                     --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
                     --silent --show-error \
-                  | jq --compact-output '{ "sequence": .release.sequence }')"
+                  | jq --compact-output '.release.sequence')"
       echo "SEQUENCE=${sequence}" > release.env
   artifacts:
     reports:
