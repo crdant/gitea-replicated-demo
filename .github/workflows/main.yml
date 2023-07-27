@@ -62,7 +62,6 @@ jobs:
         uses: actions/download-artifact@master
         with:
           name: chart
-          path: ${{ needs.package-chart.outputs.chart }}
       - name: Install Replicated CLI
         id: install-cli
         run: |
