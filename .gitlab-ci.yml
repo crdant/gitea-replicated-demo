@@ -20,6 +20,7 @@ stages:          # List of stages for jobs, and their order of execution
     - 'Package Chart'
   image:
     name: nixery.dev/shell/gnugrep/gzip/curl/jq/yq-go
+    entrypoint: [""]
   script:
     - |
       chart=$(ls ./*.tgz)
