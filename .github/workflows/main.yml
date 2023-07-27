@@ -124,7 +124,6 @@ jobs:
         run: |
           set -euxo pipefail
           cluster_id=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --wait ${WAIT} --output json | jq --raw-output .id)
-          replicated cluster kubeconfig --id ${cluster_id}
           echo "cluster_id=${cluster_id}" >> $GITHUB_OUTPUT
           echo "cluster_name=${CLUSTER_NAME}" >> $GITHUB_OUTPUT
         env:
@@ -138,6 +137,7 @@ jobs:
         id: install-chart
         run: |
           set -euxo pipefail
+          replicated cluster kubeconfig --id ${cluster_id}
           helm registry login ${REGISTRY} --username ${CUSTOMER_LOGIN} --password ${CUSTOMER_PASSWORD}
           helm install ${CHART}
         env:
@@ -145,6 +145,7 @@ jobs:
           REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
           REGISTRY: registry.replicated.com
           CHART: oci://registry.replicated.com/${{ secrets.REPLICATED_APP }}/releases/${{ steps.create-release.outputs.release-sequence }}
+          CLUSTER_ID: ${{ steps.create-cluster.outputs.cluster-id }}
           CUSTOMER_LOGIN: ${{ steps.create-customer.outputs.customer-login }}
           CUSTOMER_PASSWORD: ${{ steps.create-customer.outputs.customer-password }}
       - name: Delete test cluster
