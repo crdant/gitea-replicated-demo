@@ -43,7 +43,7 @@ jobs:
         SHORT_SHA: ${{ steps.get-short-rev.outputs.short-rev }}
     - name: Upload chart artifact
       id: uplaad-chart
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v3
       with:
         name: chart
         path: ${{ steps.package-chart.outputs.package }}
@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Download chart artifact
         id: get-chart
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v3
         with:
           name: chart
       - name: Install Replicated CLI
