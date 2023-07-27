@@ -109,8 +109,8 @@ jobs:
         run: |
           set -euxo pipefail
           customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
-          customer_id=$(echo "${customer}" | jq .customer.id)
-          customer_password=$(echo "${customer}" | jq .customer.installationId)
+          customer_id=$(echo "${customer}" | jq .id)
+          customer_password=$(echo "${customer}" | jq .installationId)
           echo "customer-id=${customer_id}" >> $GITHUB_OUTPUT
           echo "customer-login=${CUSTOMER_EMAIL}" >> $GITHUB_OUTPUT
           echo "customer-password=$customer_password}" >> $GITHUB_OUTPUT
