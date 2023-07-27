@@ -71,6 +71,7 @@ jobs:
       - name: Create Release
         id: create-release
         run: |
+          set -euxo pipefail
           app_id="$(replicated api get /v3/apps \
                       | jq --raw-output --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')"
           jq --null-input --compact-output --arg chart ${CHART} --rawfile content <(base64 -w 0 ${CHART}) '[ {"name": $chart, "path": $chart, "content": $content}]' \
