@@ -23,6 +23,7 @@ stages:          # List of stages for jobs, and their order of execution
     entrypoint: [""]
   script:
     - |
+      set -euxo pipefail
       chart=$(ls ./*.tgz)
       app_id="$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
                    --header 'Accept: application/json' \
