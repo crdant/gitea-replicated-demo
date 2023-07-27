@@ -137,7 +137,7 @@ jobs:
         id: install-chart
         run: |
           set -euxo pipefail
-          replicated cluster kubeconfig --id ${cluster_id}
+          replicated cluster kubeconfig --id ${CLUSTER_ID}
           helm registry login ${REGISTRY} --username ${CUSTOMER_LOGIN} --password ${CUSTOMER_PASSWORD}
           helm install ${CHART}
         env:
