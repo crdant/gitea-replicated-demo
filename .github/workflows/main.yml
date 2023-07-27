@@ -150,6 +150,7 @@ jobs:
           CUSTOMER_PASSWORD: ${{ steps.create-customer.outputs.customer-password }}
       - name: Delete test cluster
         id: delete-cluster
+        when: always()
         run: |
           set -euxo pipefail
           replicated cluster rm ${CLUSTER_ID}
@@ -157,6 +158,7 @@ jobs:
           CLUSTER_ID: ${{ steps.create-cluster.outputs.cluster-id }}
       - name: Delete test customer
         id: delete-customer
+        when: always()
         run: |
           set -euxo pipefail
           replicated cluster customer --customer ${CLUSTER_ID}
