@@ -19,23 +19,25 @@ stages:          # List of stages for jobs, and their order of execution
   dependencies:
     - 'Package Chart'
   image:
-    name: nixery.dev/shell/curl/jq
+    name: nixery.dev/shell/curl/jq/gnugrep
   script:
     - |
       chart=$(ls ./*.tgz)
       app_id="$(curl --location 'https://api.replicated.com/vendor/v3/apps' \
                    --header 'Accept: application/json' \
                    --header "Authorization: ${REPLICATED_API_TOKEN}" \
+                   --silent --show-error \
                 | jq --raw-output --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')"
-      spec_gzip="$(jq --compact --null-input --arg chart ${chart} --rawfile content <(base64 -w 0 ${chart}) '[ {"name": $chart, "path": $chart, "content": $content}]' | \
+      jq --null-input --compact-output --arg chart ${chart} --rawfile content <(base64 -w 0 ${chart}) '[ {"name": $chart, "path": $chart, "content": $content}]' \
         | gzip --to-stdout \
-        | base64 -w 0)"
+        | base64 -w 0 > spec.gz
       sequence="$(curl --location "https://api.replicated.com/vendor/v3/app/${app_id}/release" \
                     --header 'Content-Type: application/json' \
                     --header 'Accept: application/json' \
                     --header "Authorization: ${REPLICATED_API_TOKEN}" \
-                    --data "$(jq --compact --null-input --arg spec_gzip "${spec_gzip}" '{ "spec_gzip", $spec_gzip }')" \
-                  | jq '{ "sequence": .sequence }')"
+                    --data "$(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }')" \
+                    --silent --show-error \
+                  | jq --compact-output '{ "sequence": .release.sequence }')"
       echo "SEQUENCE=${sequence}" > release.env
   artifacts:
     reports:
