@@ -86,7 +86,7 @@ jobs:
         id: create-customer
         run: |
           customer_id=$(replicated customer create --type test --name ${CUSTOMER_NAME} --output json | jq .customer.id)
-          echo "customer_id=${customer_id}"
+          echo "customer_id=${customer_id}" >> $GITHUB_OUTPUT
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
           REPLICATED_APP: ${{ secrets.REPLICATED_APP }}
