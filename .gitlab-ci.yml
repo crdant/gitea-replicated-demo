@@ -1,19 +1,34 @@
 stages:          # List of stages for jobs, and their order of execution
   - package
   - release
+  - smoke-test
   - promote
 
+VARIABLES:
+  REGISTRY: registry.replicated.com
+  CUSTOMER_NAME: ${CI_COMMIT_REF_NAME}@${CI_COMMIT_SHORT_SHA}.${CI_JOB_NAME}.${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}
+  CUSTOMER_EMAIL: ${CI_JOB_NAME}.${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}@${CI_COMMIT_SHORT_SHA}.test
+  CLUSTER_NAME: ${CI_COMMIT_REF_NAME}@${CI_COMMIT_SHORT_SHA}-${CI_JOB_NAME}-${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}
+  
 'Package Chart':      # Package with Helm
   stage: package
   image: 
-    name: dtzar/helm-kubectl:3.12.2
+    name: nixery.dev/shell/gnugrep/helm/kubectl/yq-go
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
+    - name=$(yq '.name' Chart.yaml)
+    - version=$(yq '.version' Chart.yaml)
+    - CHART=${name}-${version}.tgz
+    - CHART_VERSION="${version}+build.${SHORT_SHA}"
     - helm package -u . # As the entrypoint is skipped, specifying the entire command.
+    - echo "CHART=${CHART}" > package.env
+    - echo "CHART_VERSION=${CHART_VERSION}" > package.env
   artifacts:
     paths:
       - "**/*.tgz"
-
+    reports:
+      dotenv: package.env
+ 
 'Create Release':      # Create the release 
   stage: release
   dependencies:
@@ -40,11 +55,50 @@ stages:          # List of stages for jobs, and their order of execution
                     --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
                     --silent --show-error \
                   | jq --compact-output '.release.sequence')"
-      echo "SEQUENCE=${sequence}" > release.env
+      echo "RELEASE_SEQUENCE=${sequence}" > release.env
   artifacts:
     reports:
       dotenv: release.env
   
+'Smoke Test':
+  stage: release
+  dependencies:
+    - 'Package Chart'
+  image:
+    name: nixery.dev/shell/gnugrep/gzip/curl/jq/yq-go
+    entrypoint: [""]
+  script: 
+    - |
+      curl -o install.sh -sSL https://raw.githubusercontent.com/replicatedhq/replicated/master/install.sh
+      bash ./install.sh
+    - |
+      customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
+      CUSTOMER_ID=$(echo "${customer}" | jq --raw-output .id)
+      CUSTOMER_PASSWORD=$(echo "${customer}" | jq --raw-output .installationId)
+    - CLUSTER_ID=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --wait ${WAIT} --output json | jq --raw-output .id)
+    - |
+      AUTH_STRING=${CUSTOMER_PASSWORD}:${CUSTOMER_PASSWORD}
+      DOCKERCONFIG_JSON=$(jq --null-input --compact-output --arg authString ${AUTH_STRING} '{"auths":{"proxy.replicated.com":{"auth": $authString | @base64 },"registry.replicated.com":{"auth": $authString | @base64 }}}' | base64 -w 0)
+        echo "dockerconfig-json=${dockerconfig_json}" >> $GITHUB_OUTPUT
+    - |
+      CHART_URI=oci://${REGISTRY}/${REPLICATED_APP}}/release__${RELEASE_SEQUENCE}/gitea
+      replicated cluster kubeconfig --id ${CLUSTER_ID}
+      helm registry login ${REGISTRY} --username ${CUSTOMER_LOGIN} --password ${CUSTOMER_PASSWORD}
+      helm install gitea ${CHART_URI} --set global.replicated.dockerconfigjson=${DOCKERCONFIG_JSON} --version ${CHART_VERSION}
+    - replicated cluster rm ${CLUSTER_ID}
+    - replicated customer archive --customer ${CUSTOMER_ID}
+  parallel:
+    matrix:
+      - DISTRO: k3s
+        VERSION: 
+          - "1.25"
+          - "1.26"
+  variables:
+    DISTRO: ${{ matrix.cluster.distribution }}
+    VERSION: ${{ matrix.cluster.version }}
+    WAIT: 5m
+    CHART_VERSION: ${{ needs.package-chart.outputs.chart-version }}
+
 'Promote Release':      # Promote the release to the appropriate channel
   stage: promote
   dependencies:
@@ -53,6 +107,6 @@ stages:          # List of stages for jobs, and their order of execution
     name: replicated/vendor-cli:latest
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
-    - /replicated release promote ${SEQUENCE} ${CI_COMMIT_REF_NAME}
+    - /replicated release promote ${RELEASE_SEQUENCE} ${CI_COMMIT_REF_NAME}
 
 
