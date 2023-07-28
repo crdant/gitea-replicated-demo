@@ -14,7 +14,7 @@ variables:
 'Package Chart':      # Package with Helm
   stage: package
   image: 
-    name: nixery.dev/shell/gnugrep/helm/kubectl/yq-go
+    name: nixery.dev/shell/gnugrep/kubernetes-helm/kubectl/yq-go
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
     - name=$(yq '.name' Chart.yaml)
