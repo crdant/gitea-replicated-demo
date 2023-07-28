@@ -216,7 +216,7 @@ jobs:
           set -u
 
           if [[ -z "${channel_id}" ]]; then
-            replicated api post /v3/app/${app_id}/channel -b "$(jq --compact-output --arg channel ${CHANNEL} { \"name\": $channel }')"
+            replicated api post /v3/app/${app_id}/channel -b "$(jq --compact-output --arg channel ${CHANNEL} '{ \"name\": $channel }')"
           fi
         env:
           REPLICATED_API_TOKEN: ${{ secrets.REPLICATED_API_TOKEN }}
