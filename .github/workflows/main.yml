@@ -210,7 +210,11 @@ jobs:
           set -euxo pipefail
           app_id="$(replicated api get /v3/apps \
                       | jq --raw-output --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $slug ) | .id')"
+
+          set +u
           channel_id=$(replicated api get /v3/app/${app_id} | jq --raw-output --arg channel ${CHANNEL} '.app.channels[] | select ( .name == $channel ) | .id')
+          set -u
+
           if [[ -z "${channel_id}" ]]; then
             replicated api post /v3/app/${app_id}/channel -b "$(jq --compact-output --arg channel ${CHANNEL} { \"name\": $channel }')"
           fi
