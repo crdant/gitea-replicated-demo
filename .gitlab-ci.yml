@@ -62,7 +62,7 @@ variables:
       dotenv: release.env
   
 'Smoke Test':
-  stage: release
+  stage: smoke-test
   dependencies:
     - 'Package Chart'
   image:
