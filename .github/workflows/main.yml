@@ -139,7 +139,7 @@ jobs:
       - name: Prepare registry secret
         id: prepare-secret
         run: |
-          dockerconfig_json=$(jq --null-input --compact-output --arg authString ${AUTH_STRING} '{"auths":{"proxy.replicated.com":{"auth": $authString | @base64 },"registry.replicated.com":{"auth": $authString | @base64 }}}' | base64)
+          dockerconfig_json=$(jq --null-input --compact-output --arg authString ${AUTH_STRING} '{"auths":{"proxy.replicated.com":{"auth": $authString | @base64 },"registry.replicated.com":{"auth": $authString | @base64 }}}' | base64 -w 0)
           echo "dockerconfig-json=${dockerconfig_json}" >> $GITHUB_OUTPUT
         env:
           AUTH_STRING: ${{ steps.create-customer.ouptuts.customer-password }}:${{ steps.create-customer.outputs.customer-password }} 
