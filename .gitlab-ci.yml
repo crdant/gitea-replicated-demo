@@ -22,8 +22,8 @@ variables:
     - CHART=${name}-${version}.tgz
     - CHART_VERSION="${version}+build.${SHORT_SHA}"
     - helm package -u . # As the entrypoint is skipped, specifying the entire command.
-    - echo "CHART=${CHART}" > package.env
-    - echo "CHART_VERSION=${CHART_VERSION}" > package.env
+    - echo "CHART=${CHART}" >> package.env
+    - echo "CHART_VERSION=${CHART_VERSION}" >> package.env
   artifacts:
     paths:
       - "**/*.tgz"
@@ -56,7 +56,7 @@ variables:
                     --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
                     --silent --show-error \
                   | jq --compact-output '.release.sequence')"
-      echo "RELEASE_SEQUENCE=${sequence}" > release.env
+      echo "RELEASE_SEQUENCE=${sequence}" >> release.env
   artifacts:
     reports:
       dotenv: release.env
