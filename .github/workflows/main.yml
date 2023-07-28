@@ -52,7 +52,7 @@ jobs:
           
   # Create a Replicated release without promoting to a channel. The Replicated
   # CLI isn't super scripting friendly when it comes to creating releases, so
-  # this job uses a few different calls with curl instead.
+  # this job uses a few different calls with curl and the api subcommand instead.
   create-release:
     runs-on: ubuntu-latest
     needs: package-chart
@@ -78,6 +78,8 @@ jobs:
           jq --null-input --compact-output --arg chart ${CHART} --rawfile content <(base64 -w 0 ${CHART}) '[ {"name": $chart, "path": $chart, "content": $content}]' \
             | gzip --to-stdout \
             | base64 -w 0 > spec.gz
+          # use `curl` instead of `replicated api post` because the data being sent can't all sit
+          # on the command line without overflowing a limit
           sequence="$(curl --location "https://api.replicated.com/vendor/v3/app/${app_id}/release" \
                         --header 'Content-Type: application/json' \
                         --header 'Accept: application/json' \
