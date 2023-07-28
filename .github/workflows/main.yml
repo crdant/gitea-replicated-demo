@@ -187,7 +187,9 @@ jobs:
 
   promote-release:
     runs-on: ubuntu-latest
-    needs: smoke-test
+    needs: 
+      - create-release
+      - smoke-test
     steps:
       - uses: actions/checkout@v3
       - name: Get the channel for the release
