@@ -9,6 +9,7 @@ VARIABLES:
   CUSTOMER_NAME: ${CI_COMMIT_REF_NAME}@${CI_COMMIT_SHORT_SHA}.${CI_JOB_NAME}.${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}
   CUSTOMER_EMAIL: ${CI_JOB_NAME}.${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}@${CI_COMMIT_SHORT_SHA}.test
   CLUSTER_NAME: ${CI_COMMIT_REF_NAME}@${CI_COMMIT_SHORT_SHA}-${CI_JOB_NAME}-${CI_PROJECT_ID}.${CI_CONCURRENT_PROJECT_ID}
+  CLUSTER_WAIT: 5m
   
 'Package Chart':      # Package with Helm
   stage: package
@@ -75,7 +76,7 @@ VARIABLES:
       customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
       CUSTOMER_ID=$(echo "${customer}" | jq --raw-output .id)
       CUSTOMER_PASSWORD=$(echo "${customer}" | jq --raw-output .installationId)
-    - CLUSTER_ID=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --wait ${WAIT} --output json | jq --raw-output .id)
+    - CLUSTER_ID=$(replicated cluster create --name ${CLUSTER_NAME} --distribution ${DISTRO} --version ${VERSION} --wait ${CLUSTER_WAIT} --output json | jq --raw-output .id)
     - |
       AUTH_STRING=${CUSTOMER_PASSWORD}:${CUSTOMER_PASSWORD}
       DOCKERCONFIG_JSON=$(jq --null-input --compact-output --arg authString ${AUTH_STRING} '{"auths":{"proxy.replicated.com":{"auth": $authString | @base64 },"registry.replicated.com":{"auth": $authString | @base64 }}}' | base64 -w 0)
@@ -93,11 +94,6 @@ VARIABLES:
         VERSION: 
           - "1.25"
           - "1.26"
-  variables:
-    DISTRO: ${{ matrix.cluster.distribution }}
-    VERSION: ${{ matrix.cluster.version }}
-    WAIT: 5m
-    CHART_VERSION: ${{ needs.package-chart.outputs.chart-version }}
 
 'Promote Release':      # Promote the release to the appropriate channel
   stage: promote
