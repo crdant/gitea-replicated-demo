@@ -71,7 +71,7 @@ variables:
   script: 
     - |
       curl -o install.sh -sSL https://raw.githubusercontent.com/replicatedhq/replicated/master/install.sh
-      bash ./install.sh
+      bash ./install.sh /usr/bin
     - |
       customer=$(replicated customer create --type test --name ${CUSTOMER_NAME} --email smoke@${GITHUB_REF_NAME}.test --output json)
       CUSTOMER_ID=$(echo "${customer}" | jq --raw-output .id)
