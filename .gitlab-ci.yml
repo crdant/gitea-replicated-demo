@@ -14,7 +14,7 @@ variables:
 'Package Chart':      # Package with Helm
   stage: package
   image: 
-    name: nixery.dev/shell/gnugrep/helm/kubectl/yq-go
+    name: nixery.dev/shell/gnugrep/kubernetes-helm/kubectl/yq-go
     entrypoint: [""] # This is a must. Entrypoint must be overriden to allow the script part to work. Script can not be skipped for the pipeline spec.
   script:
     - name=$(yq '.name' Chart.yaml)
@@ -22,8 +22,8 @@ variables:
     - CHART=${name}-${version}.tgz
     - CHART_VERSION="${version}+build.${SHORT_SHA}"
     - helm package -u . # As the entrypoint is skipped, specifying the entire command.
-    - echo "CHART=${CHART}" > package.env
-    - echo "CHART_VERSION=${CHART_VERSION}" > package.env
+    - echo "CHART=${CHART}" >> package.env
+    - echo "CHART_VERSION=${CHART_VERSION}" >> package.env
   artifacts:
     paths:
       - "**/*.tgz"
@@ -56,13 +56,13 @@ variables:
                     --data @<(jq --null-input --compact-output --rawfile spec_gzip spec.gz '{ "spec_gzip", $spec_gzip }') \
                     --silent --show-error \
                   | jq --compact-output '.release.sequence')"
-      echo "RELEASE_SEQUENCE=${sequence}" > release.env
+      echo "RELEASE_SEQUENCE=${sequence}" >> release.env
   artifacts:
     reports:
       dotenv: release.env
   
 'Smoke Test':
-  stage: release
+  stage: smoke-test
   dependencies:
     - 'Package Chart'
   image:
