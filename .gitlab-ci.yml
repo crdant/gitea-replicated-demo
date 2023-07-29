@@ -80,7 +80,6 @@ variables:
     - |
       AUTH_STRING=${CUSTOMER_PASSWORD}:${CUSTOMER_PASSWORD}
       DOCKERCONFIG_JSON=$(jq --null-input --compact-output --arg authString ${AUTH_STRING} '{"auths":{"proxy.replicated.com":{"auth": $authString | @base64 },"registry.replicated.com":{"auth": $authString | @base64 }}}' | base64 -w 0)
-        echo "dockerconfig-json=${dockerconfig_json}" >> $GITHUB_OUTPUT
     - |
       CHART_URI=oci://${REGISTRY}/${REPLICATED_APP}}/release__${RELEASE_SEQUENCE}/gitea
       replicated cluster kubeconfig --id ${CLUSTER_ID}
