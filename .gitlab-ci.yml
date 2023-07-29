@@ -66,7 +66,7 @@ variables:
   dependencies:
     - 'Package Chart'
   image:
-    name: nixery.dev/shell/tar/gnugrep/gzip/curl/jq/yq-go
+    name: nixery.dev/shell/gnutar/gnugrep/gzip/curl/jq/yq-go
     entrypoint: [""]
   script: 
     - |
