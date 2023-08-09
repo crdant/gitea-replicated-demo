@@ -1,0 +1,74 @@
+apiVersion: kots.io/v1beta2
+kind: HelmChart
+metadata:
+  name: gitea
+spec:
+  # chart identifies a matching chart from a .tgz
+  chart:
+    name: gitea
+    chartVersion: 0.3.2-replicated.5
+  
+  # weight determines the order that charts are applied, with lower weights first.
+  weight: 42
+
+  # helmUpgradeFlags specifies additional flags to pass to the `helm upgrade` command.
+  helmUpgradeFlags:
+    - --skip-crds
+    - --no-hooks
+    - --timeout
+    - 1200s
+    - --history-max=15
+
+  # values are used in the customer environment as a pre-render step
+  # these values are supplied to helm template
+  values:
+    appName: "repl{{ ConfigOption `name`}}"
+    rootUrl: "repl{{ ConfigOption `root_url`}}"
+    exposeSSH: "repl{{ ConfigOption `expose_ssh`}}"
+    
+    adminUsername: "repl{{ ConfigOption `admin_username`}}"
+    adminPassword: "repl{{ ConfigOption `admin_username`}}"
+    adminEmail: "repl{{ ConfigOption `admin_email`}}"
+
+    postgresql:
+      enabled: repl{{ ConfigOptionEquals `database_type` `embedded_postgres`}}
+
+    global:
+      replicated:
+        dockerconfigjson: repl{{ LicenseDockerCfg }}
+
+    # avoids overlapping functionality between the Replicated SDK and KOTS
+    replicated:
+      sdk:
+        enabled: false
+
+    # enable debug logging for now
+    image:
+      debug: true
+
+  optionalValues:
+  - when: "repl{{ ConfigOptionEquals `database_type` `embedded_postgres`}}"
+    recursiveMerge: false
+    values:
+      postgresql:
+        auth:
+          password: "repl{{ if ConfigOptionEquals `database_type` `embedded_postgres`}}repl{{ ConfigOption `embedded_postgres_password`}}repl{{ end}}" 
+
+  - when: "repl{{ ConfigOptionEquals `database_type` `external_postgres`}}"
+    recursiveMerge: false
+    values:
+      externalDatabase:
+        username: "repl{{ if ConfigOptionEquals `database_type` `external_postgres`}}repl{{ ConfigOption `external_postgres_username`}}repl{{ end}}"
+        password: "repl{{ if ConfigOptionEquals `database_type` `external_postgres`}}repl{{ ConfigOption `external_postgres_password`}}repl{{ end}}"
+        host: "repl{{ if ConfigOptionEquals `database_type` `external_postgres`}}repl{{ ConfigOption `external_postgres_host`}}repl{{ end}}"
+        database: "repl{{ if ConfigOptionEquals `database_type` `external_postgres`}}repl{{ ConfigOption `external_postgres_database`}}repl{{ end}}"
+        port: "repl{{ if ConfigOptionEquals `database_type` `external_postgres`}}repl{{ ConfigOption `external_postgres_port`}}repl{{ end}}"
+
+builder:
+  postgresql:
+    enabled: true
+  # not 100% sure on this...if we only build bundles for Helm install then
+  # the image in the bundle will never be used
+  replicated:
+    sdk:
+      enabled: true

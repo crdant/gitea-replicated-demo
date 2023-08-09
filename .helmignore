@@ -23,3 +23,7 @@
 Makefile
 # built package
 gitea-*.tgz
+# kots files
+kots/
+# release
+release/

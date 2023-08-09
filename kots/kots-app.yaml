@@ -1,0 +1,16 @@
+---
+apiVersion: kots.io/v1beta1
+kind: Application
+metadata:
+  name: gitea
+spec:
+  title: Gitea
+  icon: https://about.gitea.com/images/gitea.svg
+  statusInformers:
+    - deployment/gitea
+  proxyPublicImages: true
+  ports:
+    - serviceName: "gitea"
+      servicePort: 80
+      localPort: 8888
+      applicationUrl: "http://gitea"
