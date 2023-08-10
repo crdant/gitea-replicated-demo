@@ -24,10 +24,9 @@ $(PACKAGE): Chart.yaml Chart.lock templates/*
 
 kots: $(KOTS_MANIFESTS) $(PACKAGE) 
 
-# N.B. right now this is copying 4x, need to fix
 .PHONY: $(KOTS_MANIFESTS)
 $(KOTS_MANIFESTS):
-	@cp $(KOTS_MANIFESTS) $(RELEASE_DIR)
+	@cp $@ $(RELEASE_DIR)
 
 lint: chart
 	@replicated release lint --chart $(PACKAGE)
