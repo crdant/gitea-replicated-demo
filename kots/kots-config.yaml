@@ -10,6 +10,7 @@ spec:
     title: Instance Configuration
     items:
       - name: name
+        title: Name
         type: text
         default: "Gitea: Git with a cup of tea"
       - name: root_url
@@ -28,12 +29,15 @@ spec:
     title: Administrator Configuration
     items:
       - name: admin_username
+        title: Username
         type: text
         default: bn_user
       - name: admin_password
+        title: Password
         type: password
         required: true
       - name: admin_email
+        title: Email
         type: text
         required: true
 
