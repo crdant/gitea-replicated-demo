@@ -1,4 +1,4 @@
-APPLICATION := Gitea
+APPLICATION := "Gitea Redux"
 APP_ID	 := $(shell replicated api get /v3/apps | jq -r --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $$slug ) | .id')
 SEQUENCE ?= $(shell replicated api get /v3/app/$(APP_ID)/releases | jq '.releases[0].sequence')
 
@@ -104,7 +104,7 @@ customers:
 	@replicated customer create --channel Stable --expires-in 26300h --name Halvorsen
 	@replicated customer create --channel Beta --snapshot --expires-in 730h --name Spinka
 	@replicated customer create --channel Beta --snapshot --expires-in 17530h --name Stehr
-	@replicated customer create --channel Unstable --expires-in 8766h --name Nienow
+	@replicated customer create --channel Unstable --kots-install=false --expires-in 8766h --name Nienow
 	@replicated customer create --channel Beta --expires-in 17530h --name Quitzon-Greenholt
 	@replicated customer create --channel Stable --snapshot --expires-in 8766h --name Emmerich
 	@replicated customer create --channel Stable --snapshot --name Gulgow
