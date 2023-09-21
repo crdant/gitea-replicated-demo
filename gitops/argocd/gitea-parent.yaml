@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea-parent
+  namespace: helmvm
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/crdant/gitea-replicated-demo.git
+    targetRevision: feature/argocd-gitops
+    path: gitops/argocd/application
+  destination:
+    namespace: helmvm
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+    - CreateNamespace=true

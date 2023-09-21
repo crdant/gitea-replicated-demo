@@ -1,0 +1,63 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: preflight-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+  namespace: helmvm
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+      containers:
+      - name: check
+        image: ghcr.io/crdant/replicated-toolkit@sha256:0cc5ada8c4df3bece48f47af9ec0c83aee2a382ca6ecc2a1a1d107c1c1e9d17b
+        env:
+        - name: HOME
+          value: /home/replicant
+        command:
+        - bash
+        - -c 
+        - |
+          # little bit of a hack since the exit code for `preflight` is not an indicator
+          # as to whether there were any failures
+          set -euxo pipefail
+
+          jq -r '.tlsClientConfig.keyData | @base64d' /var/run/secrets/argocd.io/cluster/config > ${HOME}/client.key
+          jq -r '.tlsClientConfig.certData | @base64d' /var/run/secrets/argocd.io/cluster/config > ${HOME}/client.crt
+          jq -r '.tlsClientConfig.caData | @base64d' /var/run/secrets/argocd.io/cluster/config > ${HOME}/ca.crt
+
+          helm template oci://registry.shortrib.io/gitea-redux-spider/gitea --version 0.3.2-replicated.5  \
+            | kubectl preflight --interactive=false --format json --server https://raccoon.lab.shortrib.net:6443 \
+                --certificate-authority ${HOME}/ca.crt --client-certificate ${HOME}/client.crt \
+                --client-key ${HOME}/client.key - \
+
+        volumeMounts:
+        - mountPath: /home/replicant/.docker
+          name: registry-credentials
+          readOnly: true
+        - mountPath: /var/run/secrets/argocd.io/cluster
+          name: argo-cluster-credentials
+          readOnly: true
+        - mountPath: /home/replicant
+          name: home
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsUser: 1001
+      volumes:
+      - name: registry-credentials
+        secret:
+          secretName: preflight-registry-credentials
+          items:
+          - key: .dockerconfigjson
+            path: config.json
+      - name: argo-cluster-credentials
+        secret:
+          secretName: cluster-raccoon.lab.shortrib.net-689020247
+      - name: home
+        emptyDir: {}
+      restartPolicy: Never
+  backoffLimit: 0
