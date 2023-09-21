@@ -33,4 +33,7 @@ Session.vim
 # build package
 gitea-*.tgz
 
+# release files
+release/**
+
 .history

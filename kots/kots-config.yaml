@@ -1,0 +1,86 @@
+---
+apiVersion: kots.io/v1beta1
+kind: Config
+metadata:
+  name: config-sample
+spec:
+  groups:
+  - name: application 
+    description: Configures the Gitea instance
+    title: Instance Configuration
+    items:
+      - name: name
+        title: Name
+        type: text
+        default: "Gitea: Git with a cup of tea"
+      - name: root_url
+        type: text
+        title: Root URL
+        help_text: Root URL used for link generation
+        required: true
+      - name: expose_ssh
+        title: Enable SSH
+        description: Provide SSH access to repositories
+        type: bool
+        default: "1"
+
+  - name: admin 
+    description: Configures administration of the instance
+    title: Administrator Configuration
+    items:
+      - name: admin_username
+        title: Username
+        type: text
+        default: bn_user
+      - name: admin_password
+        title: Password
+        type: password
+        required: true
+      - name: admin_email
+        title: Email
+        type: text
+        required: true
+
+  - name: database
+    title: Database Configuration
+    description: Configurations the Gitea database
+    items:
+    - name: database_type
+      help_text: Would you like to use install an embedded postgres instance, or connect to an external instance that you manage?
+      type: select_one
+      title: Database Type
+      default: embedded_postgres
+      items:
+        - name: embedded_postgres
+          title: Embedded Postgres
+        - name: external_postgres
+          title: External Postgres
+    - name: embedded_postgres_password
+      hidden: true
+      type: password
+      value: "{{repl RandomString 32}}"
+    - name: external_postgres_host
+      title: Postgres Host
+      when: '{{repl ConfigOptionEquals "database_type" "external_postgres"}}'
+      type: text
+      default: postgres
+    - name: external_postgres_port
+      title: Postgres Port
+      when: '{{repl ConfigOptionEquals "database_type" "external_postgres"}}'
+      type: text
+      default: "5432"
+    - name: external_postgres_username
+      title: Postgres Username
+      when: '{{repl ConfigOptionEquals "database_type" "external_postgres"}}'
+      type: text
+      required: true
+    - name: external_postgres_password
+      title: Postgres Password
+      when: '{{repl ConfigOptionEquals "database_type" "external_postgres"}}'
+      type: password
+      required: true
+    - name: external_postgres_database
+      title: Postgres Database
+      when: '{{repl ConfigOptionEquals "database_type" "external_postgres"}}'
+      type: text
+      default: postgres

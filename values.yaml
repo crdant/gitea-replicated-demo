@@ -18,6 +18,11 @@ global:
   - replicated-registry
   storageClass: ""
 
+## @section Replicated distribution parameters
+replicated:
+  sdk:
+    enabled: true
+ 
 ## @section Common parameters
 ##
 

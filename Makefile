@@ -1,4 +1,4 @@
-APPLICATION := Gitea
+APPLICATION := "Gitea Redux"
 APP_ID	 := $(shell replicated api get /v3/apps | jq -r --arg slug ${REPLICATED_APP} '.apps[] | select ( .slug == $$slug ) | .id')
 SEQUENCE ?= $(shell replicated api get /v3/app/$(APP_ID)/releases | jq '.releases[0].sequence')
 
@@ -6,8 +6,13 @@ PROJECT_DIR		 := $(shell pwd)
 PROJECT_PARAMS := secrets/params.yaml
 CHANNEL				 ?= $(shell git branch --show-current)
 
-VERSION := $(shell yq .version Chart.yaml)
-PACKAGE := gitea-$(VERSION).tgz
+RELEASE_DIR := $(PROJECT_DIR)/release
+
+VERSION	:= $(shell yq .version Chart.yaml)
+PACKAGE	:= $(RELEASE_DIR)/gitea-$(VERSION).tgz
+
+KOTS_DIR       := $(PROJECT_DIR)/kots
+KOTS_MANIFESTS := $(wildcard $(KOTS_DIR)/*.yaml)
 
 app:
 	@replicated app create $(APPLICATION)
@@ -15,10 +20,19 @@ app:
 chart: $(PACKAGE)
 
 $(PACKAGE): Chart.yaml Chart.lock templates/*
-	@helm package -u .
+	@helm package -u . -d $(RELEASE_DIR)
+
+kots: $(KOTS_MANIFESTS) $(PACKAGE) 
+
+.PHONY: $(KOTS_MANIFESTS)
+$(KOTS_MANIFESTS):
+	@cp $@ $(RELEASE_DIR)
 
 lint: chart
 	@replicated release lint --chart $(PACKAGE)
+
+kots-lint: kots
+	@replicated release lint --yaml-dir $(RELEASE_DIR)
 
 release: chart
 ifndef RELEASE_NOTES
@@ -27,6 +41,18 @@ endif
 	replicated release create \
 		--app ${REPLICATED_APP} \
 		--chart ${PACKAGE} \
+		--version $(VERSION) \
+		--release-notes "$(RELEASE_NOTES)" \
+		--ensure-channel \
+		--promote $(CHANNEL)
+
+kots-release: kots
+ifndef RELEASE_NOTES
+	$(error RELEASE_NOTES not provided)
+endif
+	replicated release create \
+		--app ${REPLICATED_APP} \
+		--yaml-dir $(RELEASE_DIR) \
 		--version $(VERSION) \
 		--release-notes "$(RELEASE_NOTES)" \
 		--ensure-channel \
@@ -78,7 +104,7 @@ customers:
 	@replicated customer create --channel Stable --expires-in 26300h --name Halvorsen
 	@replicated customer create --channel Beta --snapshot --expires-in 730h --name Spinka
 	@replicated customer create --channel Beta --snapshot --expires-in 17530h --name Stehr
-	@replicated customer create --channel Unstable --expires-in 8766h --name Nienow
+	@replicated customer create --channel Unstable --kots-install=false --expires-in 8766h --name Nienow
 	@replicated customer create --channel Beta --expires-in 17530h --name Quitzon-Greenholt
 	@replicated customer create --channel Stable --snapshot --expires-in 8766h --name Emmerich
 	@replicated customer create --channel Stable --snapshot --name Gulgow
