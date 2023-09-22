@@ -74,7 +74,7 @@
       - pass:
           when: "== digitalocean"
           message: DigitalOcean is a supported Kubernetes distribution to run Gitea in production
-      - warn:
+      - pass:
           message: We are unable to detect the Kubernetes distribution you are running but you should give it a try
 - nodeResources:
     checkName: Are sufficient CPU resources available in the cluster
