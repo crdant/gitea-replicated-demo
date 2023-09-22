@@ -5,8 +5,8 @@ dependencies:
 - name: common
   repository: oci://registry-1.docker.io/bitnamicharts
   version: 2.12.0
-- name: replicated-sdk
+- name: replicated
   repository: oci://registry.replicated.com/library
-  version: 1.0.0-beta.7
-digest: sha256:aa94c84bba9f423209e6c1ae589a8fd3db0a89b1b1eda1236e7249f2dcc4d2b8
-generated: "2023-09-22T14:56:38.396527-04:00"
+  version: 1.0.0-beta.8
+digest: sha256:4eec5abf76769abca2cf2563875ceab0ebd0213b7121c7ebde51514abf1609ad
+generated: "2023-09-22T16:26:10.580999-04:00"

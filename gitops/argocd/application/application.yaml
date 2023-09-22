@@ -11,7 +11,7 @@ spec:
   source:
     chart: gitea-redux-spider/gitea 
     repoURL: registry.shortrib.io
-    targetRevision: 0.3.2-replicated.6
+    targetRevision: 0.3.2-replicated.7
     helm:
       values: |
         rootUrl: git.shortrib.dev

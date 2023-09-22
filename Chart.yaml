@@ -13,9 +13,9 @@ dependencies:
     tags:
       - bitnami-common
     version: 2.x.x
-  - name: replicated-sdk
+  - name: replicated
     repository: oci://registry.replicated.com/library
-    version: 1.0.0-beta.7
+    version: 1.0.0-beta.8
     condition: replicated.sdk.enabled
 description: Gitea is a lightweight code hosting solution. Written in Go, features low resource consumption, easy upgrades and multiple databases.
 home: https://bitnami.com
@@ -33,4 +33,4 @@ maintainers:
 name: gitea
 sources:
   - https://github.com/bitnami/charts/tree/main/bitnami/gitea
-version: 0.3.2-replicated.6
+version: 0.3.2-replicated.7
