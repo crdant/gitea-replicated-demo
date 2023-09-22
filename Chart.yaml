@@ -15,7 +15,7 @@ dependencies:
     version: 2.x.x
   - name: replicated-sdk
     repository: oci://registry.replicated.com/library
-    version: 0.0.1-beta.2
+    version: 1.0.0-beta.7
     condition: replicated.sdk.enabled
 description: Gitea is a lightweight code hosting solution. Written in Go, features low resource consumption, easy upgrades and multiple databases.
 home: https://bitnami.com
