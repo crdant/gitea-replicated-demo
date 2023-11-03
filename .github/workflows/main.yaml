@@ -66,6 +66,7 @@ jobs:
 
   customer-representative-testing:
     needs: 
+    - package-chart
     - get-customer-instances
     if: ${{ !contains(needs.get-customer-instances.outputs.matrix, '[]') }}
     strategy:
