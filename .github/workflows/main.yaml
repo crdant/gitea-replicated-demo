@@ -93,3 +93,9 @@ jobs:
           chart: chart/${{ needs.package-chart.outputs.chart }}
           kubernetes-distribution: ${{ matrix.cluster.distribution }}
           kubernetes-version: ${{ matrix.cluster.version }}
+
+      - id: delete-cluster
+        uses: replicatedhq/compatibility-actions/remove-cluster@v1
+        with:
+          cluster-id: ${{ steps.prepare-cluster.outputs.cluster-id }}
+          api-token: ${{ secrets.REPLICATED_TOKEN }}
