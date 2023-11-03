@@ -49,6 +49,8 @@ jobs:
         path: ${{ steps.package-chart.outputs.package }}
           
   get-customer-instances:
+    needs:
+    - package-chart
     outputs:
       matrix: ${{ steps.get-customer-instances.outputs.matrix}}
     runs-on: ubuntu-22.04
@@ -63,7 +65,8 @@ jobs:
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
 
   customer-representative-testing:
-    needs: get-customer-instances
+    needs: 
+    - get-customer-instances
     if: ${{ !contains(needs.get-customer-instances.outputs.matrix, '[]') }}
     strategy:
       fail-fast: false
