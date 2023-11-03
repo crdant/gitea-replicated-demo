@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       chart: ${{ steps.package-chart.outputs.package }}
+      version: ${{ steps.package-chart.outputs.version }}
     steps:
     - uses: actions/checkout@v3
     - name: Get release channel
@@ -35,9 +36,10 @@ jobs:
     - name: Package Helm chart with a build-specific version
       id: package-chart
       run: |
-        version="${CHART_VERSION}.build.${SHORT_SHA}"
+        version="${CHART_VERSION}+build.${SHORT_SHA}"
         helm package . --version="${version}" -u 
         echo "package=gitea-${version}.tgz" >> $GITHUB_OUTPUT
+        echo "version=${version}" >> $GITHUB_OUTPUT
       env:
         CHART_VERSION: ${{ steps.get-chart-version.outputs.result }}
         SHORT_SHA: ${{ steps.get-short-rev.outputs.short-rev }}
