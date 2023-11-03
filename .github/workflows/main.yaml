@@ -98,4 +98,4 @@ jobs:
         uses: replicatedhq/compatibility-actions/remove-cluster@v1
         with:
           cluster-id: ${{ steps.prepare-cluster.outputs.cluster-id }}
-          api-token: ${{ secrets.REPLICATED_TOKEN }}
+          api-token: ${{ secrets.REPLICATED_API_TOKEN }}
