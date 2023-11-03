@@ -80,9 +80,6 @@ jobs:
       - name: Download chart artifact
         id: get-chart
         uses: actions/download-artifact@master
-        with:
-          name: chart
-          path: ${{ needs.package-chart.outputs.chart }}
 
       - name: Prepare Cluster
         id: prepare-cluster
