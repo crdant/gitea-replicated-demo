@@ -77,6 +77,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Download chart artifact
+        id: get-chart
+        uses: actions/download-artifact@master
+        with:
+          name: chart
+          path: ${{ needs.package-chart.outputs.chart }}
+
       - name: Prepare Cluster
         id: prepare-cluster
         uses: replicatedhq/replicated-actions/prepare-cluster@v1
