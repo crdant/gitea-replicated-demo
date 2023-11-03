@@ -88,6 +88,6 @@ jobs:
           app-slug: ${{ secrets.REPLICATED_APP }}
           api-token: ${{ secrets.REPLICATED_API_TOKEN }}
           helm-chart-name: gitea
-          chart: ${{ needs.package-chart.outputs.chart }}
+          chart: chart/${{ needs.package-chart.outputs.chart }}
           kubernetes-distribution: ${{ matrix.cluster.distribution }}
           kubernetes-version: ${{ matrix.cluster.version }}
