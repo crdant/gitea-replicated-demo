@@ -6,7 +6,7 @@ spec:
   # chart identifies a matching chart from a .tgz
   chart:
     name: gitea
-    chartVersion: 0.3.2-replicated.5
+    chartVersion: 0.3.2-replicated.7
   
   # weight determines the order that charts are applied, with lower weights first.
   weight: 42

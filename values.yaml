@@ -9,7 +9,7 @@
 ## @param global.storageClass Global StorageClass for Persistent Volume(s)
 ##
 global:
-  imageRegistry: proxy.replicated.com/proxy/gitea-platypus
+  imageRegistry: proxy.shortrib.io/proxy/gitea-redux-spider
   ## E.g.
   ## imagePullSecrets:
   ##   - myRegistryKeySecretName
